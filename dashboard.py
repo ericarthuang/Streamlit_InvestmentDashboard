@@ -15,7 +15,7 @@ viewall_page = st.Page(
 )
 
 viewbycompany_page = st.Page(
-    page="views/viewByCompany.py",
+    page="views/viewCompany.py",
     title="Your Own Bonds",
     icon=":material/business:",
 )
