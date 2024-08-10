@@ -171,4 +171,3 @@ cython_debug/
 generate_keys.py
 backup/
 datta/
-hashed_pw.pkl
