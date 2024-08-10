@@ -1,5 +1,6 @@
 altair==5.3.0
 attrs==24.2.0
+bcrypt==4.2.0
 blinker==1.8.2
 cachetools==5.4.0
 certifi==2024.7.4
@@ -7,6 +8,7 @@ charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
 et-xmlfile==1.1.0
+extra-streamlit-components==0.1.71
 gitdb==4.0.11
 GitPython==3.1.43
 idna==3.7
@@ -28,8 +30,10 @@ protobuf==5.27.3
 pyarrow==17.0.0
 pydeck==0.9.1
 Pygments==2.18.0
+PyJWT==2.9.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
+PyYAML==6.0.2
 referencing==0.35.1
 requests==2.32.3
 rich==13.7.1
@@ -39,6 +43,7 @@ six==1.16.0
 smmap==5.0.1
 statsmodels==0.14.2
 streamlit==1.37.1
+streamlit-authenticator==0.1.5
 tenacity==8.5.0
 toml==0.10.2
 toolz==0.12.1
