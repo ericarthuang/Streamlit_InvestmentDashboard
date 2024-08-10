@@ -9,13 +9,13 @@ about_page = st.Page(
 )
 
 viewall_page = st.Page(
-    page="views/viewall.py",
+    page="views/viewAll.py",
     title="View PSA Bonds",
     icon=":material/bar_chart:",
 )
 
 viewbycompany_page = st.Page(
-    page="views/viewbycompany.py",
+    page="views/viewByCompany.py",
     title="Your Own Bonds",
     icon=":material/business:",
 )
