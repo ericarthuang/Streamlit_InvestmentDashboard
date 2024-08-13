@@ -8,13 +8,13 @@ about_page = st.Page(
     default=True,
 )
 
-viewall_page = st.Page(
-    page="views/viewAll.py",
+viewSharePoint_page = st.Page(
+    page="views/viewSharePoint.py",
     title="View PSA Bonds",
     icon=":material/bar_chart:",
 )
 
-viewbycompany_page = st.Page(
+viewByCompany_page = st.Page(
     page="views/viewCompany.py",
     title="Your Own Bonds",
     icon=":material/business:",
@@ -24,7 +24,7 @@ viewbycompany_page = st.Page(
 pg = st.navigation(
     {
         "Info": [about_page],
-        "Projects": [viewall_page, viewbycompany_page],
+        "Projects": [viewSharePoint_page, viewByCompany_page],
     }
 )
 
