@@ -56,6 +56,7 @@ if authentication_status:
     sharepoint_site_url = os.getenv("SHAREPOINT_SITE_URL")
     username = os.getenv("SHAREPOINT_USERNAME")
     password = os.getenv("SHAREPOINT_PASSWORD")
+    sharepoint_doc = os.getenv("SHAREPOINT_DOC")
 
     # Authenticate and connect to SharePoint
     ctx_auth = AuthenticationContext(sharepoint_site_url)
@@ -69,6 +70,7 @@ if authentication_status:
 
 
     # Function to download file from SharePoint
+    @st.cache_data
     def download_file_from_sharepoint(file_url):
         response = File.open_binary(ctx, file_url)
         file_name = os.path.basename(file_url)
@@ -90,15 +92,12 @@ if authentication_status:
 
         return df
 
-    # SharePoint and Folder urls
-    sharepoint_doc = "Shared Documents"
+    # SharePoint Folder name and file name
     folder_name = 'investment'
     file_name = 'data_bonds_pure.xlsx'
 
     folder_url = f"/sites/DashboardDatabase/{sharepoint_doc}/{folder_name}"
     file_url = f"{folder_url}/{file_name}"
-
-    #https://hannstarboardcorp.sharepoint.com/sites/DashboardDatabase/Shared%20Documents/Investment/data_bonds_pure.xlsx
 
     # Download the file from SharePoint
     file_name = download_file_from_sharepoint(file_url)
@@ -412,7 +411,7 @@ if authentication_status:
         df_payback_selected['Year-Month'] = df_payback_selected['配息日'].dt.to_period('M')
 
         groupby_interest = pd.DataFrame(df_payback_selected.groupby(
-                df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["應收利息"].sum()).reset_index()
+            df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["應收利息"].sum()).reset_index()
 
         groupby_payack = pd.DataFrame(df_payback_selected.groupby(
             df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["本利合計"].sum()).reset_index()
@@ -436,7 +435,6 @@ if authentication_status:
             title="Total Payback Schedule",
             labels={"本利合計": "Total Payback", "Year-Month": "Date"},
         )
-
 
         left_column, right_column = st.columns(2)
         with left_column:
