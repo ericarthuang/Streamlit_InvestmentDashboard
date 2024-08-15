@@ -8,6 +8,11 @@ about_page = st.Page(
     default=True,
 )
 
+# --- Logo Setup ---
+st.logo('image/PSA Logo.jpg')
+
+
+# --- Page Setup ---
 viewSharePoint_page = st.Page(
     page="views/viewSharePoint.py",
     title="View PSA Bonds",
@@ -20,16 +25,20 @@ viewByCompany_page = st.Page(
     icon=":material/business:",
 )
 
+viewstock_page = st.Page(
+    page="views/viewStock.py",
+    title="View PSA Stocks",
+    icon=":material/trending_up:",
+)
+
 # --- Navigation Setup ---
 pg = st.navigation(
     {
         "Info": [about_page],
-        "Projects": [viewSharePoint_page, viewByCompany_page],
+        "Projects": [viewSharePoint_page, viewByCompany_page, viewstock_page],
     }
 )
 
-# --- Logo Setup ---
-st.logo('image/PSA Logo.jpg')
 
 # --- Run Navigation ---
 pg.run()

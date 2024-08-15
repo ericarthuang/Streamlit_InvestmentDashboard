@@ -16,7 +16,6 @@ from streamlit_option_menu import option_menu
 from dotenv import load_dotenv
 
 
-# emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
 st.set_page_config(
     page_title="Dashboard",
     page_icon=":bar_chart:",
@@ -98,9 +97,6 @@ if authentication_status:
     folder_url = f"/sites/DashboardDatabase/{sharepoint_doc}/{folder_name}"
     file_url = f"{folder_url}/{file_name}"
 
-    #https://hannstarboardcorp.sharepoint.com/sites/DashboardDatabase/Shared%20Documents/Investment/data_bonds_pure.xlsx
-
-    
     # Download the file from SharePoint
     file_name = download_file_from_sharepoint(file_url)
 
@@ -137,7 +133,7 @@ if authentication_status:
         default=df["交易對象"].unique(),
     )
 
-    # --- Selected Dataframe ---產品
+    # --- Selected Dataframe ---
     df_selected = df.query(
         '公司名==@company & 債券類別==@bond_type & 信評等級==@risk_level & 交易對象==@brokers'
     )
