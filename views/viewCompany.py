@@ -2,8 +2,11 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from streamlit_option_menu import option_menu
+
 from PIL import Image
 
+# emojis: https://www.webfx.com/tools/emoji-cheat-sheet/
 st.set_page_config(
     page_title="Dashboard",
     page_icon=":bar_chart:",
@@ -27,6 +30,8 @@ def get_data_from_excel(filepath: str, sheet_name: str):
         io=filepath,
         engine="openpyxl",
         sheet_name=sheet_name,
+        # skiprows=0,
+        # usecols="A:Z",
         header=0,
     )
 
@@ -84,7 +89,7 @@ if uploaded_file:
         "信評等級")["交割金額"].sum().reset_index().sort_values(by="交割金額", ascending=False)
 
     groupby_interest = df_selected.groupby(
-        "公司名")["利息"].sum().reset_index().sort_values(by="利息", ascending=False)
+        "公司名")["應收利息"].sum().reset_index().sort_values(by="應收利息", ascending=False)
 
     groupby_broker = df_selected.groupby(
         "交易對象")["交割金額"].sum().reset_index()
@@ -120,6 +125,59 @@ if uploaded_file:
 
     st.markdown("---")
 
+    # --- Charts for Payback Date---
+    st.header("Payback Timeseries Analysis")
+
+    df_payback = get_data_from_excel(uploaded_file, "Database_Payback")
+
+    df_payback_selected = df_payback[
+        (df_payback["公司名"].isin(company)) \
+        & (df_payback["交易對象"].isin(brokers)) \
+        & (df_payback["信評等級"].isin(risk_level)) \
+        & (df_payback["債券類別"].isin(bond_type))
+    ]
+
+    df_payback_selected['Year'] = df_payback_selected['配息日'].dt.to_period('Y')
+
+    groupby_interest = pd.DataFrame(df_payback_selected.groupby(
+            df_payback_selected['Year'].dt.strftime('%Y'))["應收利息"].sum()).reset_index()
+
+    groupby_payack = pd.DataFrame(df_payback_selected.groupby(
+            df_payback_selected['Year'].dt.strftime('%Y'))["本利合計"].sum()).reset_index()
+
+
+    fig_interest = px.bar(
+        data_frame=groupby_interest,
+        x="應收利息",
+        y="Year",
+        orientation="h",
+        text_auto='$.2s',
+        color='Year',
+        title="Interest Payment Schedule",
+        labels={"應收利息": "Total Interest", "Year": "Date"},
+        height=400,
+    )
+
+    fig_payback = px.bar(
+        data_frame=groupby_payack,
+        x="本利合計",
+        y="Year",
+        orientation="h",
+        text_auto='$.2s',
+        color='Year',
+        title="Total Payback Schedule",
+        labels={"本利合計": "Total Payback", "Year": "Date"},
+        height=400,
+    )
+
+    left_column, right_column = st.columns(2)
+    with left_column:
+        st.plotly_chart(fig_interest)
+    with right_column:
+        st.plotly_chart(fig_payback)
+
+    st.markdown("---")
+
     # --- Visualize the Analysis ---
     st.title(":bar_chart: Dashboard")
     st.markdown("### Analysis of Investment")
@@ -133,26 +191,8 @@ if uploaded_file:
         color="公司名",
         title="Investment Amount by Company",
         labels={"公司名": "Company", "交割金額": "Amount"},
+        #template="plotly_white",
     )
-
-    fig_interest = px.funnel(
-        data_frame=groupby_interest,
-        x="利息",
-        y="公司名",
-        color="公司名",
-        labels={"公司名": "Company", "利息": "Interest Amount"},
-        title="Interest Amount by Company",
-    ) 
-
-    fig_interest.update_traces(
-        texttemplate="%{value:$.2s}",
-    )   
-
-    left_column, right_column = st.columns(2)
-    with left_column:
-        st.plotly_chart(fig_company)
-    with right_column:
-        st.plotly_chart(fig_interest)
 
     st.markdown("---")
 
@@ -164,6 +204,7 @@ if uploaded_file:
         color="殖利率區間",
         title="Investment Amount by YTM",
         labels={"殖利率區間": "Yield to Maturity", "交割金額": "Amount"},
+        # template="plotly_white",
     )
 
     fig_duration = px.bar(
@@ -174,6 +215,7 @@ if uploaded_file:
         color="存續期區間",
         title="Investment Amount by Duration",
         labels={"存續期區間": "Duration(Years)", "交割金額": "Amount"},
+        # template="plotly_white",
     )
 
     left_column, right_column = st.columns(2)
@@ -193,6 +235,7 @@ if uploaded_file:
         color="信評等級",
         title="Investment Amount by Risk Level",
         labels={"信評等級": "Risk Level", "交割金額": "Amount"},
+            #template="seaborn",
     )
 
     fig_issuer = px.bar(
@@ -203,6 +246,7 @@ if uploaded_file:
         color="發行機構",
         title="Top 10 Investment Amount by Issuers",
         labels={"發行機構": "Issuers", "交割金額": "Amount"},
+        #template="seaborn",
     )
 
     left_column, right_column = st.columns(2)
@@ -259,63 +303,115 @@ if uploaded_file:
 
     st.markdown("---")
 
+    # --- Charts Animation for Payback Date---
+    # "%Y/%m/%d %H:%M:%S"
+
     # --- Charts for Payback Date---
-    st.markdown("### Payback Timeseries Analysis")
-
-    df_payback = get_data_from_excel(uploaded_file, "Database_Payback")
-
-    df_payback_selected = df_payback[
-        (df_payback["公司名"].isin(company)) \
-        & (df_payback["交易對象"].isin(brokers)) \
-        & (df_payback["信評等級"].isin(risk_level)) \
-        & (df_payback["債券類別"].isin(bond_type))
-    ]
+    st.header("Payback Timeseries Analysis")
 
     startDay = pd.to_datetime(df_payback_selected['配息日']).min()
     endDay = pd.to_datetime(df_payback_selected['配息日']).max()
 
-    left_column, right_column = st.columns(2)
+    left_column, right_column = st.columns([3,2])
     with left_column:
-        date1 = pd.to_datetime(st.date_input("Start Date", startDay))
-    with right_column:
-        date2 = pd.to_datetime(st.date_input("End Date", endDay))
+        selected = option_menu(
+                menu_title=None,
+                options=["Yearly", "Monthly"],
+                orientation="horizontal",
+        )
+
+    left_column, right_column = st.columns([3,2])
+    with left_column:
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            date1 = pd.to_datetime(st.date_input("Start Date", startDay))
+        with col_2:
+            date2 = pd.to_datetime(st.date_input("End Date", endDay))
 
     df_payback_selected = df_payback_selected[
         (df_payback_selected['配息日'] >= date1) \
         & (df_payback_selected['配息日'] <= date2)
-        ].copy()
+    ].copy()
 
-    df_payback_selected['Year-Month'] = df_payback_selected['配息日'].dt.to_period('M')
+    if selected == "Yearly":
+        df_payback_selected['Year'] = df_payback_selected['配息日'].dt.to_period('Y')
 
-    groupby_interest = pd.DataFrame(df_payback_selected.groupby(
-        df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["應收利息"].sum()).reset_index()
+        groupby_interest = pd.DataFrame(df_payback_selected.groupby(
+            df_payback_selected['Year'].dt.strftime('%Y'))["應收利息"].sum()).reset_index()
 
-    groupby_payack = pd.DataFrame(df_payback_selected.groupby(
-        df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["本利合計"].sum()).reset_index()
+        groupby_payack = pd.DataFrame(df_payback_selected.groupby(
+            df_payback_selected['Year'].dt.strftime('%Y'))["本利合計"].sum()).reset_index()
 
-    fig_interest = px.bar(
-        data_frame=groupby_interest,
-        x="Year-Month",
-        y="應收利息",
-        text_auto='$.2s',
-        color='Year-Month',
-        title="Interest Payment Schedule",
-        labels={"應收利息": "Total Interest", "Year-Month": "Date"},
-    )
 
-    st.plotly_chart(fig_interest)
+        fig_interest = px.bar(
+            data_frame=groupby_interest,
+            x="應收利息",
+            y="Year",
+            orientation="h",
+            text_auto='$.2s',
+            color='Year',
+            title="Interest Payment Schedule",
+            labels={"應收利息": "Total Interest", "Year": "Date"},
+            height=400,
+        )
 
-    fig_payback = px.bar(
-        data_frame=groupby_payack,
-        x="Year-Month",
-        y="本利合計",
-        text_auto='$.2s',
-        color='Year-Month',
-        title="Total Payback Schedule",
-        labels={"本利合計": "Total Payback", "Year-Month": "Date"},
-    )
+        fig_payback = px.bar(
+            data_frame=groupby_payack,
+            x="本利合計",
+            y="Year",
+            orientation="h",
+            text_auto='$.2s',
+            color='Year',
+            title="Total Payback Schedule",
+            labels={"本利合計": "Total Payback", "Year": "Date"},
+            height=400,
+        )
 
-    st.plotly_chart(fig_payback)
+        left_column, right_column = st.columns(2)
+        with left_column:
+            st.plotly_chart(fig_interest)
+        with right_column:
+            st.plotly_chart(fig_payback)
+
+
+    if selected == "Monthly":
+        df_payback_selected['Year-Month'] = df_payback_selected['配息日'].dt.to_period('M')
+
+        groupby_interest = pd.DataFrame(df_payback_selected.groupby(
+                df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["應收利息"].sum()).reset_index()
+
+        groupby_payack = pd.DataFrame(df_payback_selected.groupby(
+            df_payback_selected['Year-Month'].dt.strftime('%Y/%m'))["本利合計"].sum()).reset_index()
+
+        fig_interest = px.bar(
+            data_frame=groupby_interest,
+            x="Year-Month",
+            y="應收利息",
+            text_auto='$.2s',
+            color='Year-Month',
+            title="Interest Payment Schedule",
+            labels={"應收利息": "Total Interest", "Year-Month": "Date"},
+            height=400,
+        )
+
+        fig_payback = px.bar(
+            data_frame=groupby_payack,
+            x="Year-Month",
+            y="本利合計",
+            text_auto='$.2s',
+            color='Year-Month',
+            title="Total Payback Schedule",
+            labels={"本利合計": "Total Payback", "Year-Month": "Date"},
+            height=400,
+        )
+
+
+        left_column, right_column = st.columns(2)
+        with left_column:
+            st.plotly_chart(fig_interest)
+        with right_column:
+            st.plotly_chart(fig_payback)
+
 
     st.markdown("---")
 
