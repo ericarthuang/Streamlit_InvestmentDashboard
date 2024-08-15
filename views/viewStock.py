@@ -13,6 +13,8 @@ import json
 import requests
 from PIL import Image
 from streamlit_option_menu import option_menu
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from dotenv import load_dotenv
 
 
@@ -243,6 +245,66 @@ if authentication_status:
     
     st.plotly_chart(fig_stockProfitLoss)
 
+    st.markdown("---")
+
+    # Profit Trend
+    st.subheader("The Trend of Profit and Profit Rate")
+
+    df_profit = get_data_from_excel(file_name, "Profit_Trend")
+    df_profit['投資報酬率'] = df_profit['投資報酬率'] * 100
+    df_profit['日期'] = pd.to_datetime(df_profit['日期'])
+
+    # Set '日期' as index and apply asfreq to ensure daily frequency
+    df_profit.set_index('日期', inplace=True)
+    df_profit = df_profit.asfreq('D', method='pad')
+    df_profit.reset_index(inplace=True)
+
+    startDay = pd.to_datetime(df_profit['日期']).min()
+    endDay = pd.to_datetime(df_profit['日期']).max()
+
+    left_column, right_column = st.columns([3,2])
+    with left_column:
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            date1 = pd.to_datetime(st.date_input("Start Date", startDay))
+        with col_2:
+            date2 = pd.to_datetime(st.date_input("End Date", endDay))
+
+    df_profit_selected = df_profit.loc[
+        (df_profit['日期'] >= date1) \
+        & (df_profit['日期'] <= date2)
+    ]
+
+# Create subplots with secondary y-axis
+    fig_profit = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add line chart for profit trend
+    fig_profit.add_trace(
+        go.Scatter(
+            x=df_profit_selected['日期'], 
+            y=df_profit_selected['未實現損益估算'], 
+            name='Profit Rate', 
+            mode='lines'),
+        secondary_y=False,
+    )
+
+    # Add bar chart for profit rate trend
+    fig_profit.add_trace(
+        go.Bar(
+            x=df_profit_selected['日期'], 
+            y=df_profit_selected['投資報酬率'], 
+            name='Ptofit'),
+        secondary_y=True,
+    )
+
+    # Set y-axes titles
+    fig_profit.update_yaxes(title_text='Profit', secondary_y=False)
+    fig_profit.update_yaxes(title_text='Profit Rate(%)', secondary_y=True)
+
+    st.plotly_chart(fig_profit)
+
+    st.markdown("---")
+
     # --- Show the Selected Data ---
     st.markdown("Selected Stock List")
                 
@@ -258,7 +320,6 @@ if authentication_status:
         '市值估算': 'JP¥{0:,.0f}',
         '未實現損益估算': 'JP¥{0:,.0f}',
     })
-
 
     st.dataframe(df_display_styled)
 
