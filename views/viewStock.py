@@ -69,7 +69,6 @@ if authentication_status:
 
     
     # Function to download file from SharePoint
-    @st.cache_data
     def download_file_from_sharepoint(file_url):
         response = File.open_binary(ctx, file_url)
         file_name = os.path.basename(file_url)
