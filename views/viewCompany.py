@@ -328,10 +328,10 @@ if uploaded_file:
         with col_2:
             date2 = pd.to_datetime(st.date_input("End Date", endDay))
 
-    df_payback_selected = df_payback_selected[
+    df_payback_selected = df_payback_selected.loc[
         (df_payback_selected['配息日'] >= date1) \
         & (df_payback_selected['配息日'] <= date2)
-    ].copy()
+    ]
 
     if selected == "Yearly":
         df_payback_selected['Year'] = df_payback_selected['配息日'].dt.to_period('Y')

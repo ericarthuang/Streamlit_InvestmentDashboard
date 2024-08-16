@@ -14,7 +14,6 @@ import requests
 from PIL import Image
 from streamlit_option_menu import option_menu
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from dotenv import load_dotenv
 
 
@@ -275,31 +274,51 @@ if authentication_status:
         & (df_profit['日期'] <= date2)
     ]
 
-# Create subplots with secondary y-axis
-    fig_profit = make_subplots(specs=[[{"secondary_y": True}]])
-
-    # Add line chart for profit trend
-    fig_profit.add_trace(
-        go.Scatter(
-            x=df_profit_selected['日期'], 
-            y=df_profit_selected['未實現損益估算'], 
-            name='Profit Rate', 
-            mode='lines'),
-        secondary_y=False,
+    # --- Create Bar Chart for Profit Trend---
+    fig_bar = px.bar(
+        df_profit, 
+        x='日期', 
+        y='未實現損益估算', 
+        labels={'未實現損益估算': '未實現損益估算'}
     )
 
-    # Add bar chart for profit rate trend
-    fig_profit.add_trace(
-        go.Bar(
-            x=df_profit_selected['日期'], 
-            y=df_profit_selected['投資報酬率'], 
-            name='Ptofit'),
-        secondary_y=True,
+    # Update bar chart color based on profit/loss
+    fig_bar.update_traces(
+        marker_color=df_profit['未實現損益估算'].apply(lambda x: 'red' if x < 0 else 'blue')
     )
 
-    # Set y-axes titles
-    fig_profit.update_yaxes(title_text='Profit', secondary_y=False)
-    fig_profit.update_yaxes(title_text='Profit Rate(%)', secondary_y=True)
+    # --- Create Line Chart for Profit Rate Trend---
+    fig_line = px.line(
+        df_profit, 
+        x='日期', 
+        y='投資報酬率', 
+        labels={'投資報酬率': '投資報酬率 (%)'}
+    )
+
+    # --- Combine Bar and Line Charts ---
+    fig_profit = go.Figure()
+
+    # Add bar chart data
+    for trace in fig_bar.data:
+        fig_profit.add_trace(trace)
+
+    # Add line chart data with secondary y-axis
+    for trace in fig_line.data:
+        trace.update(yaxis='y2', line=dict(color='white'))
+        fig_profit.add_trace(trace)
+
+    # --- Update Layout ---
+    fig_profit.update_layout(
+        yaxis2=dict(
+            title='投資報酬率 (%)',
+            overlaying='y',
+            side='right'
+        ),
+        yaxis=dict(
+            title='未實現損益估算'
+        ),
+        title=''
+    )
 
     st.plotly_chart(fig_profit)
 
