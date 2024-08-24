@@ -170,4 +170,4 @@ cython_debug/
 # others
 generate_keys.py
 backup/
-datta/
+data/
