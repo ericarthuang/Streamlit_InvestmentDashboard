@@ -341,6 +341,35 @@ if authentication_status:
 
     st.dataframe(df_display_styled)
 
+    #  --- Fund ---
+    st.header("Fund Allocation")
+
+    df_fund = get_data_from_excel(file_name, "Database_Fund")
+
+    # --- Create Bar Chart for Profit Trend---
+    df_fund_reshape = pd.melt(
+        df_fund, 
+        id_vars=['公司名'], 
+        value_vars=['市值估算', '未實現損益估算'],
+        var_name='估算類別', 
+        value_name='Amount')
+
+
+    fig_fund = px.bar(
+        df_fund_reshape, 
+        x='Amount', 
+        y='公司名', 
+        orientation='h',
+        text_auto=',.2s',
+        barmode='group',
+        color='估算類別',
+        labels={'Amount': '', '公司名': ''}
+    )
+
+    st.plotly_chart(fig_fund)
+
+    st.markdown("---")
+
 
 # --- Hide Streamlit Style ---
 hide_streamlit_style = """
